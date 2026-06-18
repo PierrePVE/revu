@@ -27,6 +27,7 @@ interface DashboardData {
   stats: {
     noteMoyenne: number
     totalAvis: number
+    avisCeMois: number
     categories: { qualite: number; service: number; attente: number }
     meilleure: { label: string; note: number } | null
     aAmeliorer: { label: string; note: number } | null
@@ -142,7 +143,7 @@ async function seDeconnecter() {
             </div>
             <div class="rounded-xl border border-gray-200 bg-white p-3 lg:p-4">
               <p class="text-[11px] leading-tight text-gray-500">Avis ce mois</p>
-              <p class="mt-1 text-base font-bold lg:text-2xl">{{ data.stats.totalAvis }}</p>
+              <p class="mt-1 text-base font-bold lg:text-2xl">{{ data.stats.avisCeMois }}</p>
             </div>
             <div class="rounded-xl bg-brand-light p-3 lg:p-4">
               <p class="text-[11px] leading-tight text-brand-dark/70">Meilleur</p>
@@ -174,7 +175,7 @@ async function seDeconnecter() {
                   </span>
                   <div class="flex w-full flex-1 items-end">
                     <div
-                      class="w-full rounded-t bg-brand"
+                      class="w-full rounded-t bg-brand animate-grow-up"
                       :style="{ height: `${Math.max(2, (pt.note / 5) * 100)}%` }"
                     />
                   </div>
@@ -196,7 +197,7 @@ async function seDeconnecter() {
                   <span class="w-16 shrink-0 truncate text-sm font-medium">{{ m.mot }}</span>
                   <div class="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
                     <div
-                      class="h-full rounded-full"
+                      class="h-full rounded-full animate-grow-right"
                       :class="couleurBarre(m.tendance)"
                       :style="{ width: `${(m.mentions / maxMentions) * 100}%` }"
                     />

@@ -50,6 +50,12 @@ export default defineEventHandler(async (event) => {
   )
   const totalAvis = rows.length
 
+  // Reviews received since the 1st of the current month (the "Avis ce mois" KPI).
+  const debutMois = new Date()
+  debutMois.setDate(1)
+  debutMois.setHours(0, 0, 0, 0)
+  const avisCeMois = rows.filter((r) => new Date(r.created_at) >= debutMois).length
+
   // 3) Keyword stats + alerts (analyser expects { id, noteGlobale, commentaire }).
   const stats = analyser(
     rows.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
@@ -104,7 +110,7 @@ export default defineEventHandler(async (event) => {
 
   return {
     commerce: { nom: commerce.nom, slug: commerce.slug },
-    stats: { noteMoyenne, totalAvis, categories, meilleure, aAmeliorer, evolution },
+    stats: { noteMoyenne, totalAvis, avisCeMois, categories, meilleure, aAmeliorer, evolution },
     motsCles,
     alertes,
   }
