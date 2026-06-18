@@ -6,6 +6,9 @@
  * ?slug= query param (e.g. /dashboard?slug=brasserie-du-centre). Everything is
  * loaded in a SINGLE call to GET /api/dashboard/:slug.
  */
+// Protected page — redirects to /login without a valid session.
+definePageMeta({ middleware: 'auth' })
+
 interface MotCle {
   mot: string
   mentions: number

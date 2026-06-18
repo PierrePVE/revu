@@ -6,6 +6,9 @@
  * is taken from the ?slug= query param (same convention as the dashboard), so a
  * link looks like /dashboard/alerte/steak?slug=brasserie-du-centre.
  */
+// Protected page — redirects to /login without a valid session.
+definePageMeta({ middleware: 'auth' })
+
 interface Commentaire {
   note: number
   texte: string

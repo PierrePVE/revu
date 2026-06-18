@@ -34,6 +34,20 @@ async function seConnecter() {
     submitting.value = false
   }
 }
+
+/** One-click demo login (no credentials), then open the demo dashboard. */
+async function voirDemo() {
+  errorMessage.value = ''
+  try {
+    const { commerce } = await $fetch<{ commerce: { nom: string; slug: string } }>(
+      '/api/auth/demo',
+      { method: 'POST' },
+    )
+    await navigateTo(`/dashboard?slug=${encodeURIComponent(commerce.slug)}`)
+  } catch {
+    errorMessage.value = 'Démo indisponible pour le moment.'
+  }
+}
 </script>
 
 <template>
@@ -92,13 +106,14 @@ async function seConnecter() {
         <span class="h-px flex-1 bg-gray-200" />ou<span class="h-px flex-1 bg-gray-200" />
       </div>
 
-      <!-- Demo access (no account needed) -->
-      <NuxtLink
-        to="/dashboard?slug=brasserie-du-centre"
-        class="block rounded-xl border border-gray-200 bg-white py-3.5 text-center font-semibold transition hover:bg-gray-50"
+      <!-- Demo access: one-click login as the demo commerce. -->
+      <button
+        type="button"
+        class="block w-full rounded-xl border border-gray-200 bg-white py-3.5 text-center font-semibold transition hover:bg-gray-50"
+        @click="voirDemo"
       >
         Voir la démo
-      </NuxtLink>
+      </button>
 
       <p class="mt-8 text-center text-xs text-gray-400">© 2026 Revu — Tous droits réservés</p>
     </div>
