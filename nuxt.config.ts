@@ -10,6 +10,11 @@ export default defineNuxtConfig({
   // Nuxt DevTools, enabled in development only.
   devtools: { enabled: true },
 
+  // Smooth cross-fade between route changes (see .page-* classes in main.css).
+  app: {
+    pageTransition: { name: 'page', mode: 'out-in' },
+  },
+
   // Global stylesheet — Tailwind v4 entry point + design tokens.
   css: ['~/assets/css/main.css'],
 
