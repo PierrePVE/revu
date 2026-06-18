@@ -24,10 +24,11 @@ interface Alerte {
 }
 interface DashboardData {
   commerce: { nom: string; slug: string }
+  periode: string
   stats: {
     noteMoyenne: number
     totalAvis: number
-    avisCeMois: number
+    avisPeriode: number
     categories: { qualite: number; service: number; attente: number }
     meilleure: { label: string; note: number } | null
     aAmeliorer: { label: string; note: number } | null
@@ -40,11 +41,24 @@ interface DashboardData {
 const route = useRoute()
 const slug = computed(() => String(route.query.slug ?? ''))
 
-// Single API call (only when a slug is present).
-const { data, error } = await useFetch<DashboardData>(() => `/api/dashboard/${slug.value}`, {
-  immediate: !!slug.value,
-  watch: [slug],
-})
+// Period focus for note / count / categories / keywords (alerts stay 30-day).
+type Periode = 'semaine' | 'mois' | 'tout'
+const periode = ref<Periode>(
+  ['semaine', 'tout'].includes(String(route.query.periode))
+    ? (route.query.periode as Periode)
+    : 'mois',
+)
+const periodes: { val: Periode; label: string }[] = [
+  { val: 'semaine', label: 'Semaine' },
+  { val: 'mois', label: 'Mois' },
+  { val: 'tout', label: 'Tout' },
+]
+
+// Single API call; re-fetches when the slug or the selected period changes.
+const { data, error } = await useFetch<DashboardData>(
+  () => `/api/dashboard/${slug.value}?periode=${periode.value}`,
+  { immediate: !!slug.value, watch: [slug, periode] },
+)
 
 useSeoMeta({
   title: () => (data.value ? `Dashboard · ${data.value.commerce.nom}` : 'Dashboard · Revu'),
@@ -110,10 +124,16 @@ function couleurBarre(tendance: string) {
   return 'bg-orange-400'
 }
 
-/** Link to the alert-detail page, carrying the slug. */
-function lienAlerte(mot: string) {
-  return `/dashboard/alerte/${encodeURIComponent(mot)}?slug=${encodeURIComponent(slug.value)}`
+/** Link to the detail page, carrying the slug + the period to focus on.
+ *  Alerts pass 'mois' (their fixed 30-day window); keywords pass the current one. */
+function lienDetail(mot: string, p: Periode) {
+  return `/dashboard/alerte/${encodeURIComponent(mot)}?slug=${encodeURIComponent(slug.value)}&periode=${p}`
 }
+
+/** Human label for the active period (used in KPI captions). */
+const libellePeriode = computed(
+  () => ({ semaine: '7 jours', mois: '30 jours', tout: 'tout' })[periode.value],
+)
 
 /** Log out (clears the session cookie) then return to the login page. */
 async function seDeconnecter() {
@@ -166,7 +186,7 @@ async function seDeconnecter() {
           <NuxtLink
             v-for="a in data.alertes"
             :key="a.mot"
-            :to="lienAlerte(a.mot)"
+            :to="lienDetail(a.mot, 'mois')"
             class="mt-5 flex items-start gap-3 rounded-xl border border-alert/20 bg-alert-bg p-4 shadow-sm transition hover:brightness-95"
           >
             <span class="text-xl leading-none">⚠️</span>
@@ -179,15 +199,32 @@ async function seDeconnecter() {
             <span class="ml-auto self-center text-alert">›</span>
           </NuxtLink>
 
+          <!-- Period selector — drives the figures below; alerts stay on 30 days. -->
+          <div class="mt-5 flex items-center gap-2">
+            <span class="text-xs text-gray-400">Période</span>
+            <div class="inline-flex rounded-lg border border-gray-200 bg-white p-0.5 text-xs shadow-sm">
+              <button
+                v-for="p in periodes"
+                :key="p.val"
+                type="button"
+                class="rounded-md px-3 py-1.5 font-medium transition active:scale-[0.97]"
+                :class="periode === p.val ? 'bg-brand text-white' : 'text-gray-600 hover:text-ink'"
+                @click="periode = p.val"
+              >
+                {{ p.label }}
+              </button>
+            </div>
+          </div>
+
           <!-- 4 KPI CARDS (bigger on desktop) -->
           <div class="mt-5 grid grid-cols-4 gap-2 lg:gap-4">
             <div class="rounded-xl border border-gray-200 bg-white p-3 shadow-sm lg:p-4">
-              <p class="text-[11px] leading-tight text-gray-500">Note globale</p>
+              <p class="text-[11px] leading-tight text-gray-500">Note moyenne</p>
               <p class="mt-1 text-base font-bold lg:text-2xl">{{ data.stats.noteMoyenne.toFixed(1) }} ★</p>
             </div>
             <div class="rounded-xl border border-gray-200 bg-white p-3 shadow-sm lg:p-4">
-              <p class="text-[11px] leading-tight text-gray-500">Avis ce mois</p>
-              <p class="mt-1 text-base font-bold lg:text-2xl">{{ data.stats.avisCeMois }}</p>
+              <p class="text-[11px] leading-tight text-gray-500">Avis · {{ libellePeriode }}</p>
+              <p class="mt-1 text-base font-bold lg:text-2xl">{{ data.stats.avisPeriode }}</p>
             </div>
             <div class="rounded-xl bg-brand-light p-3 shadow-sm lg:p-4">
               <p class="text-[11px] leading-tight text-brand-dark/70">Meilleur</p>
@@ -255,12 +292,12 @@ async function seDeconnecter() {
 
             <!-- KEYWORDS -->
             <section class="mt-8 lg:mt-0 lg:rounded-xl lg:border lg:border-gray-200 lg:bg-white lg:p-5 lg:shadow-sm">
-              <h2 class="text-sm font-semibold">Mots les plus mentionnés</h2>
+              <h2 class="text-sm font-semibold">Mots les plus mentionnés · {{ libellePeriode }}</h2>
               <div class="mt-4 flex flex-col gap-3">
                 <NuxtLink
                   v-for="m in data.motsCles"
                   :key="m.mot"
-                  :to="lienAlerte(m.mot)"
+                  :to="lienDetail(m.mot, periode)"
                   class="flex items-center gap-3 rounded-lg px-1 py-1 transition hover:bg-gray-50"
                 >
                   <span class="w-16 shrink-0 truncate text-sm font-medium">{{ m.mot }}</span>

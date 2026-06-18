@@ -50,44 +50,50 @@ export default defineEventHandler(async (event) => {
   )
   const totalAvis = rows.length
 
-  // Reviews received since the 1st of the current month (the "Avis ce mois" KPI).
-  const debutMois = new Date()
-  debutMois.setDate(1)
-  debutMois.setHours(0, 0, 0, 0)
-  const avisCeMois = rows.filter((r) => new Date(r.created_at) >= debutMois).length
+  // Period the merchant is focusing on (drives note / count / categories / keywords).
+  const periode = lirePeriode(getQuery(event).periode)
+  const rowsPeriode = filtrerPeriode(rows, periode)
+  const avisPeriode = rowsPeriode.length
 
-  // 3) Keyword stats + alerts over a ROLLING 30-DAY WINDOW (so a fixed problem
-  //    ages out), with treated alerts hidden until a newer review makes it recur.
+  // 3a) Keyword stats over the SELECTED period (top 8 most mentioned).
+  const statsPeriode = analyser(
+    rowsPeriode.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
+  )
+  const motsCles = statsPeriode
+    .slice(0, 8)
+    .map((s: { mot: string; mentions: number; noteMoyenne: number; tendance: string }) => ({
+      mot: s.mot,
+      mentions: s.mentions,
+      noteMoyenne: s.noteMoyenne,
+      tendance: s.tendance,
+    }))
+
+  // 3b) Alerts over a FIXED rolling 30-day window (operational, independent of the
+  //     selected period); handled alerts stay hidden until a newer review recurs.
   const rowsFenetre = dansFenetre(rows)
-  const stats = analyser(
+  const statsAlertes = analyser(
     rowsFenetre.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
   )
-  const motsCles = stats.map((s: { mot: string; mentions: number; noteMoyenne: number; tendance: string }) => ({
-    mot: s.mot,
-    mentions: s.mentions,
-    noteMoyenne: s.noteMoyenne,
-    tendance: s.tendance,
-  }))
-
-  // Hide alerts the merchant already handled (unless a newer review recurred).
   const traites = await motsTraites(commerce.id)
-  const alertes = genererAlertes(stats).filter(
+  const alertes = genererAlertes(statsAlertes).filter(
     (a: { mot: string }) =>
       !estTraitee(
         a.mot,
-        stats.find((s: { mot: string; avisIds: string[] }) => s.mot === a.mot)?.avisIds ?? [],
+        statsAlertes.find((s: { mot: string; avisIds: string[] }) => s.mot === a.mot)?.avisIds ?? [],
         rowsFenetre,
         traites,
       ),
   )
 
-  // 4) Aggregates -----------------------------------------------------------
-  const globales = rows.map((r) => r.note_globale).filter((n): n is number => typeof n === 'number')
+  // 4) Aggregates over the SELECTED period -----------------------------------
+  const globales = rowsPeriode
+    .map((r) => r.note_globale)
+    .filter((n): n is number => typeof n === 'number')
   const noteMoyenne = round1(moyenne(globales))
 
   // Average of a category column, ignoring rows that didn't rate it (NULL).
   const moyenneCategorie = (col: 'note_qualite' | 'note_service' | 'note_attente') => {
-    const vals = rows.map((r) => r[col]).filter((n): n is number => typeof n === 'number')
+    const vals = rowsPeriode.map((r) => r[col]).filter((n): n is number => typeof n === 'number')
     return round1(moyenne(vals))
   }
   const categories = {
@@ -123,7 +129,8 @@ export default defineEventHandler(async (event) => {
 
   return {
     commerce: { nom: commerce.nom, slug: commerce.slug },
-    stats: { noteMoyenne, totalAvis, avisCeMois, categories, meilleure, aAmeliorer, evolution },
+    periode,
+    stats: { noteMoyenne, totalAvis, avisPeriode, categories, meilleure, aAmeliorer, evolution },
     motsCles,
     alertes,
   }

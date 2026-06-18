@@ -33,6 +33,7 @@ export default defineEventHandler(async (event) => {
 
   // The analyser lowercases + strips accents, so normalise the lookup the same way.
   const mot = decodeURIComponent(motParam).toLowerCase()
+  const periode = lirePeriode(getQuery(event).periode)
 
   const commerceRes = await query<{ id: string }>('SELECT id FROM commerces WHERE slug = $1', [slug])
   const commerce = commerceRes.rows[0]
@@ -46,8 +47,8 @@ export default defineEventHandler(async (event) => {
     [commerce.id],
   )
 
-  // Same rolling 30-day window as the dashboard, so the figures match the alert.
-  const rowsFenetre = dansFenetre(rows)
+  // Window the reviews to the requested period (alerts pass 'mois' = 30 days).
+  const rowsFenetre = filtrerPeriode(rows, periode)
   const stats = analyser(
     rowsFenetre.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
   )

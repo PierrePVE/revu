@@ -7,8 +7,35 @@
  * — i.e. the problem recurred. `query` is auto-imported by Nitro.
  */
 
-/** How far back alerts and keyword stats look. */
+/** How far back the operational alert window looks. */
 export const FENETRE_ALERTES_JOURS = 30
+
+/** Period the merchant can focus the dashboard on (note, count, keywords). */
+export type Periode = 'semaine' | 'mois' | 'tout'
+
+/** Number of days a period spans, or null for all-time. */
+export function joursPourPeriode(periode: Periode): number | null {
+  if (periode === 'semaine') return 7
+  if (periode === 'mois') return 30
+  return null
+}
+
+/** Parse an untrusted query value into a Periode (defaults to 'mois'). */
+export function lirePeriode(valeur: unknown): Periode {
+  return valeur === 'semaine' || valeur === 'tout' ? valeur : 'mois'
+}
+
+/** Keep only rows within the given period (all rows when period = 'tout'). */
+export function filtrerPeriode<T extends { created_at: string | Date }>(
+  rows: T[],
+  periode: Periode,
+  now = Date.now(),
+): T[] {
+  const jours = joursPourPeriode(periode)
+  if (jours === null) return rows
+  const debut = now - jours * 24 * 60 * 60 * 1000
+  return rows.filter((r) => new Date(r.created_at).getTime() >= debut)
+}
 
 /** Keep only rows within the alert window (last FENETRE_ALERTES_JOURS days). */
 export function dansFenetre<T extends { created_at: string | Date }>(rows: T[], now = Date.now()): T[] {

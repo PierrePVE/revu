@@ -26,16 +26,19 @@ interface AlerteDetail {
 const route = useRoute()
 const mot = computed(() => String(route.params.mot ?? ''))
 const slug = computed(() => String(route.query.slug ?? ''))
+const periode = computed(() => String(route.query.periode ?? 'mois'))
 
-// Single API call.
+// Single API call (windowed to the period passed by the dashboard).
 const { data, error } = await useFetch<AlerteDetail>(
-  () => `/api/dashboard/alerte/${slug.value}/${encodeURIComponent(mot.value)}`,
-  { immediate: !!slug.value, watch: [slug, mot] },
+  () => `/api/dashboard/alerte/${slug.value}/${encodeURIComponent(mot.value)}?periode=${periode.value}`,
+  { immediate: !!slug.value, watch: [slug, mot, periode] },
 )
 
 useSeoMeta({ title: () => `Alerte « ${mot.value} » · Revu` })
 
-const lienRetour = computed(() => `/dashboard?slug=${encodeURIComponent(slug.value)}`)
+const lienRetour = computed(
+  () => `/dashboard?slug=${encodeURIComponent(slug.value)}&periode=${periode.value}`,
+)
 
 // "Marquer comme traité": persisted server-side. Initialise from the API and
 // flip it after a successful POST.
