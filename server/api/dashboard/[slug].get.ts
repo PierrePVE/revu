@@ -26,8 +26,11 @@ const round1 = (n: number) => Math.round(n * 10) / 10
 const moyenne = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : 0)
 
 export default defineEventHandler(async (event) => {
+  // Protected: a merchant may only read their OWN dashboard (server-enforced).
+  const session = await requireSession(event)
   const slug = getRouterParam(event, 'slug')
   if (!slug) throw createError({ statusCode: 400, message: 'Slug manquant' })
+  if (slug !== session.slug) throw createError({ statusCode: 403, message: 'Accès refusé.' })
 
   // 1) Commerce -------------------------------------------------------------
   const commerceRes = await query<{ id: string; nom: string; slug: string }>(

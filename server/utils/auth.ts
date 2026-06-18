@@ -5,6 +5,7 @@
  * (jose, HS256) stored in an httpOnly cookie — never in localStorage, which is
  * exposed to XSS. All exports are auto-imported into server routes by Nitro.
  */
+import type { H3Event } from 'h3'
 import bcrypt from 'bcryptjs'
 import { SignJWT, jwtVerify } from 'jose'
 
@@ -59,4 +60,15 @@ export async function verifierSession(token: string | undefined): Promise<Sessio
   } catch {
     return null
   }
+}
+
+/**
+ * Read & verify the session from the request cookie, or throw 401.
+ * Call at the top of any protected server route. `getCookie` and `createError`
+ * are auto-imported by Nitro.
+ */
+export async function requireSession(event: H3Event): Promise<SessionPayload> {
+  const session = await verifierSession(getCookie(event, COOKIE_SESSION))
+  if (!session) throw createError({ statusCode: 401, message: 'Authentification requise.' })
+  return session
 }

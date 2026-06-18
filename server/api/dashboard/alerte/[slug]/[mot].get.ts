@@ -24,9 +24,12 @@ function ilYA(date: string | Date, now: number): string {
 }
 
 export default defineEventHandler(async (event) => {
+  // Protected: a merchant may only read their OWN alerts (server-enforced).
+  const session = await requireSession(event)
   const slug = getRouterParam(event, 'slug')
   const motParam = getRouterParam(event, 'mot')
   if (!slug || !motParam) throw createError({ statusCode: 400, message: 'Paramètres manquants' })
+  if (slug !== session.slug) throw createError({ statusCode: 403, message: 'Accès refusé.' })
 
   // The analyser lowercases + strips accents, so normalise the lookup the same way.
   const mot = decodeURIComponent(motParam).toLowerCase()
