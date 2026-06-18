@@ -57,7 +57,7 @@ function imprimer() {
 
           <button
             type="button"
-            class="mt-5 w-full rounded-xl bg-brand py-3.5 font-semibold text-white transition hover:bg-brand-dark"
+            class="mt-5 w-full rounded-xl bg-brand py-3.5 font-semibold text-white transition hover:bg-brand-dark active:scale-[0.98]"
             @click="imprimer"
           >
             Imprimer / Enregistrer en PDF

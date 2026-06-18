@@ -95,7 +95,7 @@ async function voirDemo() {
         <button
           type="submit"
           :disabled="!peutEnvoyer"
-          class="rounded-xl bg-brand py-3.5 font-semibold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50"
+          class="rounded-xl bg-brand py-3.5 font-semibold text-white transition hover:bg-brand-dark active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {{ submitting ? 'Connexion…' : 'Se connecter' }}
         </button>
@@ -109,7 +109,7 @@ async function voirDemo() {
       <!-- Demo access: one-click login as the demo commerce. -->
       <button
         type="button"
-        class="block w-full rounded-xl border border-gray-200 bg-white py-3.5 text-center font-semibold transition hover:bg-gray-50"
+        class="block w-full rounded-xl border border-gray-200 bg-white py-3.5 text-center font-semibold transition hover:bg-gray-50 active:scale-[0.98]"
         @click="voirDemo"
       >
         Voir la démo

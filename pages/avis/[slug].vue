@@ -95,7 +95,7 @@ async function envoyer() {
       </section>
 
       <!-- Success — review submitted. -->
-      <section v-else-if="submitted" class="p-7 text-center">
+      <section v-else-if="submitted" class="animate-fade-in-up p-7 text-center">
         <div
           class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-brand-light text-2xl"
         >
@@ -156,7 +156,7 @@ async function envoyer() {
         <button
           type="submit"
           :disabled="!peutEnvoyer"
-          class="mt-6 w-full rounded-xl bg-brand py-3.5 font-semibold text-white transition hover:bg-brand-dark disabled:cursor-not-allowed disabled:opacity-50"
+          class="mt-6 w-full rounded-xl bg-brand py-3.5 font-semibold text-white transition hover:bg-brand-dark active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
           {{ submitting ? 'Envoi…' : 'Envoyer mon avis' }}
         </button>

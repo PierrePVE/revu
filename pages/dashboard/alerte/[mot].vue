@@ -113,7 +113,7 @@ const traite = ref(false)
           <button
             type="button"
             :disabled="traite"
-            class="mt-6 w-full rounded-xl py-3.5 font-semibold transition"
+            class="mt-6 w-full rounded-xl py-3.5 font-semibold transition active:scale-[0.98]"
             :class="
               traite
                 ? 'bg-brand-light text-brand-dark'
