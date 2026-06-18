@@ -1,0 +1,24 @@
+/* main.css — Tailwind v4 entry point + Revu design tokens.
+ *
+ * Colors come from the Figma palette. Declaring them under @theme exposes them
+ * as Tailwind color utilities, e.g. bg-brand, text-ink, bg-surface, text-alert. */
+@import "tailwindcss";
+
+@theme {
+  --color-brand: #1d9e75; /* primary green */
+  --color-brand-light: #e1f5ee; /* light green (subtle backgrounds) */
+  --color-brand-dark: #085041; /* dark green (hover / emphasis) */
+  --color-alert: #dc2626; /* alert red (text/icon) */
+  --color-alert-bg: #fee2e2; /* alert red background */
+  --color-ink: #1a1a1a; /* default text */
+  --color-surface: #f9fafb; /* page background */
+}
+
+/* Page defaults: light theme, comfortable mobile reading. */
+@layer base {
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+  }
+}
