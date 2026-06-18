@@ -69,6 +69,12 @@ function couleurBarre(tendance: string) {
 function lienAlerte(mot: string) {
   return `/dashboard/alerte/${encodeURIComponent(mot)}?slug=${encodeURIComponent(slug.value)}`
 }
+
+/** Log out (clears the session cookie) then return to the login page. */
+async function seDeconnecter() {
+  await $fetch('/api/auth/logout', { method: 'POST' })
+  await navigateTo('/login')
+}
 </script>
 
 <template>
@@ -82,6 +88,10 @@ function lienAlerte(mot: string) {
             <p class="mt-0.5 text-xs text-white/85">Tableau de bord · {{ moisCourant }}</p>
           </div>
           <span class="shrink-0 rounded-full bg-white/15 px-2.5 py-1 text-xs font-semibold">Revu</span>
+        </div>
+        <div class="mt-3 flex gap-4 text-xs text-white/90">
+          <NuxtLink to="/dashboard/qrcode" class="hover:underline">Mon QR code</NuxtLink>
+          <button type="button" class="hover:underline" @click="seDeconnecter">Déconnexion</button>
         </div>
       </header>
 
