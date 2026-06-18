@@ -11,8 +11,9 @@ BEGIN;
 DELETE FROM commerces WHERE email = 'test@revu.fr';
 
 -- Test commerce with a fixed UUID so the reviews below can reference it directly.
+-- Demo merchant login: test@revu.fr / demo1234 (bcrypt hash below).
 INSERT INTO commerces (id, nom, email, password_hash, slug) VALUES
-  ('11111111-1111-1111-1111-111111111111', 'La Brasserie du Centre', 'test@revu.fr', '$2b$10$fake_hash_for_dev', 'brasserie-du-centre');
+  ('11111111-1111-1111-1111-111111111111', 'La Brasserie du Centre', 'test@revu.fr', '$2a$10$pvrjytT/vTco42qsvp9KcuHcw/WFbzSVxGLw8JTnJHp3N7B3K4lXi', 'brasserie-du-centre');
 
 -- 15 reviews:
 --   * 8 mention "steak"   with a global rating of 1 or 2 (-> should trigger an alert later)
