@@ -46,30 +46,35 @@ export default defineEventHandler(async (event) => {
     [commerce.id],
   )
 
-  // Recompute keyword stats to find which reviews contain this word (same
-  // grouping as the dashboard) and its aggregate mentions / average rating.
+  // Same rolling 30-day window as the dashboard, so the figures match the alert.
+  const rowsFenetre = dansFenetre(rows)
   const stats = analyser(
-    rows.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
+    rowsFenetre.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
   )
   const stat = stats.find((s: { mot: string }) => s.mot === mot)
 
   if (!stat) {
     // Unknown word (or seen in fewer than 2 reviews): nothing to show.
-    return { mot, mentions: 0, noteMoyenne: 0, pourcentageCetteSemaine: 0, commentaires: [] }
+    return { mot, mentions: 0, noteMoyenne: 0, pourcentageCetteSemaine: 0, traite: false, commentaires: [] }
   }
 
   const ids = new Set<string>(stat.avisIds)
-  const concernes = rows.filter((r) => ids.has(r.id)) // already sorted DESC by date
+  const concernes = rowsFenetre.filter((r) => ids.has(r.id)) // already sorted DESC by date
 
   const now = Date.now()
   const SEMAINE = 7 * 24 * 60 * 60 * 1000
   const cetteSemaine = concernes.filter((r) => now - new Date(r.created_at).getTime() <= SEMAINE).length
+
+  // Already handled (and no newer review since)?
+  const traites = await motsTraites(commerce.id)
+  const traite = estTraitee(stat.mot, stat.avisIds, rowsFenetre, traites)
 
   return {
     mot: stat.mot,
     mentions: stat.mentions,
     noteMoyenne: stat.noteMoyenne,
     pourcentageCetteSemaine: stat.mentions ? Math.round((cetteSemaine / stat.mentions) * 100) : 0,
+    traite,
     commentaires: concernes.map((r) => ({
       note: r.note_globale,
       texte: r.commentaire,

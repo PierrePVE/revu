@@ -56,17 +56,30 @@ export default defineEventHandler(async (event) => {
   debutMois.setHours(0, 0, 0, 0)
   const avisCeMois = rows.filter((r) => new Date(r.created_at) >= debutMois).length
 
-  // 3) Keyword stats + alerts (analyser expects { id, noteGlobale, commentaire }).
+  // 3) Keyword stats + alerts over a ROLLING 30-DAY WINDOW (so a fixed problem
+  //    ages out), with treated alerts hidden until a newer review makes it recur.
+  const rowsFenetre = dansFenetre(rows)
   const stats = analyser(
-    rows.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
+    rowsFenetre.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
   )
-  const alertes = genererAlertes(stats)
   const motsCles = stats.map((s: { mot: string; mentions: number; noteMoyenne: number; tendance: string }) => ({
     mot: s.mot,
     mentions: s.mentions,
     noteMoyenne: s.noteMoyenne,
     tendance: s.tendance,
   }))
+
+  // Hide alerts the merchant already handled (unless a newer review recurred).
+  const traites = await motsTraites(commerce.id)
+  const alertes = genererAlertes(stats).filter(
+    (a: { mot: string }) =>
+      !estTraitee(
+        a.mot,
+        stats.find((s: { mot: string; avisIds: string[] }) => s.mot === a.mot)?.avisIds ?? [],
+        rowsFenetre,
+        traites,
+      ),
+  )
 
   // 4) Aggregates -----------------------------------------------------------
   const globales = rows.map((r) => r.note_globale).filter((n): n is number => typeof n === 'number')

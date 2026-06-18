@@ -19,6 +19,7 @@ interface AlerteDetail {
   mentions: number
   noteMoyenne: number
   pourcentageCetteSemaine: number
+  traite: boolean
   commentaires: Commentaire[]
 }
 
@@ -36,9 +37,26 @@ useSeoMeta({ title: () => `Alerte « ${mot.value} » · Revu` })
 
 const lienRetour = computed(() => `/dashboard?slug=${encodeURIComponent(slug.value)}`)
 
-// "Marquer comme traité": local-only for now — alerts are computed on the fly
-// and not yet persisted, so there is nothing to write back. (Future step.)
+// "Marquer comme traité": persisted server-side. Initialise from the API and
+// flip it after a successful POST.
 const traite = ref(false)
+watchEffect(() => {
+  if (data.value) traite.value = data.value.traite
+})
+
+/** Persist the "handled" state for this word, then reflect it in the UI. */
+async function marquerTraite() {
+  if (traite.value) return
+  try {
+    await $fetch(
+      `/api/dashboard/alerte/${encodeURIComponent(slug.value)}/${encodeURIComponent(mot.value)}`,
+      { method: 'POST' },
+    )
+    traite.value = true
+  } catch {
+    // Stay un-treated on failure; the merchant can retry.
+  }
+}
 </script>
 
 <template>
@@ -119,7 +137,7 @@ const traite = ref(false)
                 ? 'bg-brand-light text-brand-dark'
                 : 'bg-brand text-white hover:bg-brand-dark'
             "
-            @click="traite = true"
+            @click="marquerTraite"
           >
             {{ traite ? '✓ Marquée comme traitée' : 'Marquer comme traité' }}
           </button>
