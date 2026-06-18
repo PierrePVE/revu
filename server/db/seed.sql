@@ -39,4 +39,18 @@ INSERT INTO avis (commerce_id, note_globale, note_qualite, note_service, note_at
   ('11111111-1111-1111-1111-111111111111', 3, 3, 3, 2, 'Une attente un peu longue mais globalement correct.'),
   ('11111111-1111-1111-1111-111111111111', 3, 4, 3, 2, 'Attente raisonnable malgré la forte affluence.');
 
+-- Spread the reviews over the last ~4 weeks so the dashboard trend has relief
+-- (the INSERT above stamps every row with NOW()).
+WITH ordonnes AS (
+  SELECT id,
+         (row_number() OVER (ORDER BY id) - 1) AS rang,
+         count(*) OVER () AS total
+  FROM avis
+  WHERE commerce_id = '11111111-1111-1111-1111-111111111111'
+)
+UPDATE avis a
+SET created_at = NOW() - ((o.rang * 4 / o.total) * 7 + (o.rang % 6)) * INTERVAL '1 day'
+FROM ordonnes o
+WHERE a.id = o.id;
+
 COMMIT;
