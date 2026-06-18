@@ -1,20 +1,23 @@
 <script setup lang="ts">
 /**
- * StarRating.vue — reusable 1-to-5 star rating input (no external dependency).
+ * StarRating.vue — 1-to-5 star rating (no external dependency).
  *
- * Two-way bound through `v-model` (0 means "not rated yet"). Built from real
- * <button> elements so it is keyboard-accessible and screen-reader friendly.
+ * Interactive by default (two-way bound via `v-model`, 0 = "not rated yet").
+ * Pass `readonly` to render a static, non-interactive display — used in the
+ * alert-detail comment cards to show each review's rating.
  */
 const props = withDefaults(
   defineProps<{
     /** Selected value, 0..5 (v-model). */
     modelValue: number
-    /** Visual size: 'lg' for the global rating, 'sm' for category rows. */
+    /** Visual size: 'lg' for the global rating, 'sm' for category rows / displays. */
     size?: 'sm' | 'lg'
     /** Accessible group label (e.g. "Service"). */
     label?: string
+    /** Render as a static display instead of an input. */
+    readonly?: boolean
   }>(),
-  { size: 'lg', label: 'Note' },
+  { size: 'lg', label: 'Note', readonly: false },
 )
 
 const emit = defineEmits<{ 'update:modelValue': [value: number] }>()
@@ -31,7 +34,20 @@ const tailleClasse = computed(() => (props.size === 'lg' ? 'text-3xl' : 'text-xl
 </script>
 
 <template>
-  <div class="flex items-center gap-1" role="radiogroup" :aria-label="label">
+  <!-- Read-only display (e.g. a review's rating). -->
+  <div v-if="readonly" class="flex items-center gap-0.5" :aria-label="`${modelValue} sur 5`">
+    <span
+      v-for="n in 5"
+      :key="n"
+      aria-hidden="true"
+      class="leading-none"
+      :class="[tailleClasse, modelValue >= n ? 'text-brand' : 'text-gray-300']"
+      >★</span
+    >
+  </div>
+
+  <!-- Interactive input. -->
+  <div v-else class="flex items-center gap-1" role="radiogroup" :aria-label="label">
     <button
       v-for="n in 5"
       :key="n"
