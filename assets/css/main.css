@@ -76,6 +76,17 @@
   animation: grow-right 0.7s ease-out both;
 }
 
+/* Line drawing itself in (paired with SVG pathLength="1"). */
+@keyframes draw-line {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+.animate-draw-line {
+  stroke-dasharray: 1;
+  animation: draw-line 0.9s ease-out both;
+}
+
 /* Accessibility: honour users who ask for reduced motion. */
 @media (prefers-reduced-motion: reduce) {
   *,

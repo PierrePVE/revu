@@ -59,6 +59,50 @@ const moisCourant = computed(() => {
 // Longest keyword bar = the most-mentioned word (avoid divide-by-zero).
 const maxMentions = computed(() => Math.max(1, ...(data.value?.motsCles ?? []).map((m) => m.mentions)))
 
+/** Smooth (Catmull-Rom → Bézier) SVG path through the given points. */
+function pathLisse(points: { x: number; y: number }[]): string {
+  if (points.length === 0) return ''
+  if (points.length === 1) return `M ${points[0].x},${points[0].y}`
+  let d = `M ${points[0].x},${points[0].y}`
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[i - 1] ?? points[i]
+    const p1 = points[i]
+    const p2 = points[i + 1]
+    const p3 = points[i + 2] ?? p2
+    const c1x = p1.x + (p2.x - p0.x) / 6
+    const c1y = p1.y + (p2.y - p0.y) / 6
+    const c2x = p2.x - (p3.x - p1.x) / 6
+    const c2y = p2.y - (p3.y - p1.y) / 6
+    d += ` C ${c1x.toFixed(1)},${c1y.toFixed(1)} ${c2x.toFixed(1)},${c2y.toFixed(1)} ${p2.x.toFixed(1)},${p2.y.toFixed(1)}`
+  }
+  return d
+}
+
+/** SVG geometry for the 4-week evolution curve (area fill + line + points). */
+const courbe = computed(() => {
+  const pts = data.value?.stats.evolution ?? []
+  const W = 320
+  const H = 130
+  const padX = 16
+  const padTop = 22
+  const padBottom = 26
+  const innerW = W - padX * 2
+  const innerH = H - padTop - padBottom
+  const bottomY = padTop + innerH
+  const n = pts.length
+  const points = pts.map((pt, i) => ({
+    x: padX + (n > 1 ? (i * innerW) / (n - 1) : innerW / 2),
+    y: padTop + (1 - Math.min(Math.max(pt.note, 0), 5) / 5) * innerH,
+    note: pt.note,
+    semaine: pt.semaine,
+  }))
+  const line = pathLisse(points)
+  const area = points.length
+    ? `${line} L ${points[points.length - 1].x.toFixed(1)},${bottomY} L ${points[0].x.toFixed(1)},${bottomY} Z`
+    : ''
+  return { W, H, bottomY, points, line, area }
+})
+
 /** Progress-bar colour by sentiment: red negative, green positive, orange neutral. */
 function couleurBarre(tendance: string) {
   if (tendance === 'positif') return 'bg-brand'
@@ -123,7 +167,7 @@ async function seDeconnecter() {
             v-for="a in data.alertes"
             :key="a.mot"
             :to="lienAlerte(a.mot)"
-            class="mt-5 flex items-start gap-3 rounded-xl border border-alert/20 bg-alert-bg p-4 transition hover:brightness-95"
+            class="mt-5 flex items-start gap-3 rounded-xl border border-alert/20 bg-alert-bg p-4 shadow-sm transition hover:brightness-95"
           >
             <span class="text-xl leading-none">⚠️</span>
             <div class="min-w-0">
@@ -137,21 +181,21 @@ async function seDeconnecter() {
 
           <!-- 4 KPI CARDS (bigger on desktop) -->
           <div class="mt-5 grid grid-cols-4 gap-2 lg:gap-4">
-            <div class="rounded-xl border border-gray-200 bg-white p-3 lg:p-4">
+            <div class="rounded-xl border border-gray-200 bg-white p-3 shadow-sm lg:p-4">
               <p class="text-[11px] leading-tight text-gray-500">Note globale</p>
               <p class="mt-1 text-base font-bold lg:text-2xl">{{ data.stats.noteMoyenne.toFixed(1) }} ★</p>
             </div>
-            <div class="rounded-xl border border-gray-200 bg-white p-3 lg:p-4">
+            <div class="rounded-xl border border-gray-200 bg-white p-3 shadow-sm lg:p-4">
               <p class="text-[11px] leading-tight text-gray-500">Avis ce mois</p>
               <p class="mt-1 text-base font-bold lg:text-2xl">{{ data.stats.avisCeMois }}</p>
             </div>
-            <div class="rounded-xl bg-brand-light p-3 lg:p-4">
+            <div class="rounded-xl bg-brand-light p-3 shadow-sm lg:p-4">
               <p class="text-[11px] leading-tight text-brand-dark/70">Meilleur</p>
               <p class="mt-1 text-xs font-bold text-brand-dark lg:text-sm">
                 {{ data.stats.meilleure ? `${data.stats.meilleure.label} ${data.stats.meilleure.note.toFixed(1)} ★` : '—' }}
               </p>
             </div>
-            <div class="rounded-xl bg-alert-bg p-3 lg:p-4">
+            <div class="rounded-xl bg-alert-bg p-3 shadow-sm lg:p-4">
               <p class="text-[11px] leading-tight text-alert/80">À améliorer</p>
               <p class="mt-1 text-xs font-bold text-alert lg:text-sm">
                 {{ data.stats.aAmeliorer ? `${data.stats.aAmeliorer.label} ${data.stats.aAmeliorer.note.toFixed(1)} ★` : '—' }}
@@ -162,30 +206,55 @@ async function seDeconnecter() {
           <!-- EVOLUTION + KEYWORDS — stacked on mobile, two panels side-by-side on desktop. -->
           <div class="lg:mt-6 lg:grid lg:grid-cols-2 lg:gap-6">
             <!-- EVOLUTION (pure-CSS bar chart, no charting lib needed for 4 bars) -->
-            <section class="mt-6 lg:mt-0 lg:rounded-xl lg:border lg:border-gray-200 lg:bg-white lg:p-5">
+            <section class="mt-6 lg:mt-0 lg:rounded-xl lg:border lg:border-gray-200 lg:bg-white lg:p-5 lg:shadow-sm">
               <h2 class="text-sm font-semibold">Évolution — 4 dernières semaines</h2>
-              <div class="mt-4 flex h-40 items-end justify-between gap-3 lg:h-48">
-                <div
-                  v-for="pt in data.stats.evolution"
-                  :key="pt.semaine"
-                  class="flex flex-1 flex-col items-center"
-                >
-                  <span class="mb-1 text-[11px] font-medium text-gray-600">
-                    {{ pt.note ? pt.note.toFixed(1) : '—' }}
-                  </span>
-                  <div class="flex w-full flex-1 items-end">
-                    <div
-                      class="w-full rounded-t bg-brand animate-grow-up"
-                      :style="{ height: `${Math.max(2, (pt.note / 5) * 100)}%` }"
-                    />
-                  </div>
-                  <span class="mt-2 text-[11px] text-gray-500">{{ pt.semaine }}</span>
-                </div>
-              </div>
+              <svg
+                :viewBox="`0 0 ${courbe.W} ${courbe.H}`"
+                class="mt-4 w-full"
+                role="img"
+                aria-label="Évolution de la note moyenne sur 4 semaines"
+              >
+                <defs>
+                  <linearGradient id="grad-evo" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#1d9e75" stop-opacity="0.22" />
+                    <stop offset="100%" stop-color="#1d9e75" stop-opacity="0" />
+                  </linearGradient>
+                </defs>
+                <!-- Area under the curve. -->
+                <path :d="courbe.area" fill="url(#grad-evo)" />
+                <!-- The curve itself, drawn in on load. -->
+                <path
+                  :d="courbe.line"
+                  pathLength="1"
+                  fill="none"
+                  stroke="#1d9e75"
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  class="animate-draw-line"
+                />
+                <!-- Point markers + value/week labels. -->
+                <g v-for="p in courbe.points" :key="p.semaine">
+                  <circle :cx="p.x" :cy="p.y" r="3.5" fill="#ffffff" stroke="#1d9e75" stroke-width="2" />
+                  <text
+                    :x="p.x"
+                    :y="p.y - 9"
+                    text-anchor="middle"
+                    font-size="9"
+                    font-weight="600"
+                    fill="#1a1a1a"
+                  >
+                    {{ p.note ? p.note.toFixed(1) : '—' }}
+                  </text>
+                  <text :x="p.x" :y="courbe.H - 7" text-anchor="middle" font-size="9" fill="#6b7280">
+                    {{ p.semaine }}
+                  </text>
+                </g>
+              </svg>
             </section>
 
             <!-- KEYWORDS -->
-            <section class="mt-8 lg:mt-0 lg:rounded-xl lg:border lg:border-gray-200 lg:bg-white lg:p-5">
+            <section class="mt-8 lg:mt-0 lg:rounded-xl lg:border lg:border-gray-200 lg:bg-white lg:p-5 lg:shadow-sm">
               <h2 class="text-sm font-semibold">Mots les plus mentionnés</h2>
               <div class="mt-4 flex flex-col gap-3">
                 <NuxtLink
