@@ -79,7 +79,7 @@ async function seDeconnecter() {
 
 <template>
   <main class="min-h-screen bg-surface pb-12 text-ink">
-    <div class="mx-auto max-w-md">
+    <div class="mx-auto max-w-md lg:max-w-5xl">
       <!-- HEADER -->
       <header class="bg-brand px-5 py-5 text-white sm:mt-6 sm:rounded-2xl">
         <div class="flex items-start justify-between gap-3">
@@ -95,7 +95,7 @@ async function seDeconnecter() {
         </div>
       </header>
 
-      <div class="px-5">
+      <div class="px-5 lg:px-8">
         <!-- No slug provided -->
         <p v-if="!slug" class="mt-8 text-center text-sm text-gray-500">
           Aucun commerce spécifié. Ajoutez <code class="rounded bg-gray-100 px-1">?slug=…</code> à l'URL.
@@ -134,77 +134,80 @@ async function seDeconnecter() {
             <span class="ml-auto self-center text-alert">›</span>
           </NuxtLink>
 
-          <!-- 4 KPI CARDS -->
-          <div class="mt-5 grid grid-cols-4 gap-2">
-            <div class="rounded-xl border border-gray-200 bg-white p-3">
+          <!-- 4 KPI CARDS (bigger on desktop) -->
+          <div class="mt-5 grid grid-cols-4 gap-2 lg:gap-4">
+            <div class="rounded-xl border border-gray-200 bg-white p-3 lg:p-4">
               <p class="text-[11px] leading-tight text-gray-500">Note globale</p>
-              <p class="mt-1 text-base font-bold">{{ data.stats.noteMoyenne.toFixed(1) }} ★</p>
+              <p class="mt-1 text-base font-bold lg:text-2xl">{{ data.stats.noteMoyenne.toFixed(1) }} ★</p>
             </div>
-            <div class="rounded-xl border border-gray-200 bg-white p-3">
+            <div class="rounded-xl border border-gray-200 bg-white p-3 lg:p-4">
               <p class="text-[11px] leading-tight text-gray-500">Avis ce mois</p>
-              <p class="mt-1 text-base font-bold">{{ data.stats.totalAvis }}</p>
+              <p class="mt-1 text-base font-bold lg:text-2xl">{{ data.stats.totalAvis }}</p>
             </div>
-            <div class="rounded-xl bg-brand-light p-3">
+            <div class="rounded-xl bg-brand-light p-3 lg:p-4">
               <p class="text-[11px] leading-tight text-brand-dark/70">Meilleur</p>
-              <p class="mt-1 text-xs font-bold text-brand-dark">
+              <p class="mt-1 text-xs font-bold text-brand-dark lg:text-sm">
                 {{ data.stats.meilleure ? `${data.stats.meilleure.label} ${data.stats.meilleure.note.toFixed(1)} ★` : '—' }}
               </p>
             </div>
-            <div class="rounded-xl bg-alert-bg p-3">
+            <div class="rounded-xl bg-alert-bg p-3 lg:p-4">
               <p class="text-[11px] leading-tight text-alert/80">À améliorer</p>
-              <p class="mt-1 text-xs font-bold text-alert">
+              <p class="mt-1 text-xs font-bold text-alert lg:text-sm">
                 {{ data.stats.aAmeliorer ? `${data.stats.aAmeliorer.label} ${data.stats.aAmeliorer.note.toFixed(1)} ★` : '—' }}
               </p>
             </div>
           </div>
 
-          <!-- EVOLUTION (pure-CSS bar chart, no charting lib needed for 4 bars) -->
-          <section class="mt-6">
-            <h2 class="text-sm font-semibold">Évolution — 4 dernières semaines</h2>
-            <div class="mt-4 flex h-40 items-end justify-between gap-3">
-              <div
-                v-for="pt in data.stats.evolution"
-                :key="pt.semaine"
-                class="flex flex-1 flex-col items-center"
-              >
-                <span class="mb-1 text-[11px] font-medium text-gray-600">
-                  {{ pt.note ? pt.note.toFixed(1) : '—' }}
-                </span>
-                <div class="flex w-full flex-1 items-end">
-                  <div
-                    class="w-full rounded-t bg-brand"
-                    :style="{ height: `${Math.max(2, (pt.note / 5) * 100)}%` }"
-                  />
+          <!-- EVOLUTION + KEYWORDS — stacked on mobile, two panels side-by-side on desktop. -->
+          <div class="lg:mt-6 lg:grid lg:grid-cols-2 lg:gap-6">
+            <!-- EVOLUTION (pure-CSS bar chart, no charting lib needed for 4 bars) -->
+            <section class="mt-6 lg:mt-0 lg:rounded-xl lg:border lg:border-gray-200 lg:bg-white lg:p-5">
+              <h2 class="text-sm font-semibold">Évolution — 4 dernières semaines</h2>
+              <div class="mt-4 flex h-40 items-end justify-between gap-3 lg:h-48">
+                <div
+                  v-for="pt in data.stats.evolution"
+                  :key="pt.semaine"
+                  class="flex flex-1 flex-col items-center"
+                >
+                  <span class="mb-1 text-[11px] font-medium text-gray-600">
+                    {{ pt.note ? pt.note.toFixed(1) : '—' }}
+                  </span>
+                  <div class="flex w-full flex-1 items-end">
+                    <div
+                      class="w-full rounded-t bg-brand"
+                      :style="{ height: `${Math.max(2, (pt.note / 5) * 100)}%` }"
+                    />
+                  </div>
+                  <span class="mt-2 text-[11px] text-gray-500">{{ pt.semaine }}</span>
                 </div>
-                <span class="mt-2 text-[11px] text-gray-500">{{ pt.semaine }}</span>
               </div>
-            </div>
-          </section>
+            </section>
 
-          <!-- KEYWORDS -->
-          <section class="mt-8">
-            <h2 class="text-sm font-semibold">Mots les plus mentionnés</h2>
-            <div class="mt-4 flex flex-col gap-3">
-              <NuxtLink
-                v-for="m in data.motsCles"
-                :key="m.mot"
-                :to="lienAlerte(m.mot)"
-                class="flex items-center gap-3 rounded-lg px-1 py-1 transition hover:bg-gray-50"
-              >
-                <span class="w-16 shrink-0 truncate text-sm font-medium">{{ m.mot }}</span>
-                <div class="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
-                  <div
-                    class="h-full rounded-full"
-                    :class="couleurBarre(m.tendance)"
-                    :style="{ width: `${(m.mentions / maxMentions) * 100}%` }"
-                  />
-                </div>
-                <span class="w-20 shrink-0 text-right text-xs text-gray-500">
-                  {{ m.mentions }} mention{{ m.mentions > 1 ? 's' : '' }}
-                </span>
-              </NuxtLink>
-            </div>
-          </section>
+            <!-- KEYWORDS -->
+            <section class="mt-8 lg:mt-0 lg:rounded-xl lg:border lg:border-gray-200 lg:bg-white lg:p-5">
+              <h2 class="text-sm font-semibold">Mots les plus mentionnés</h2>
+              <div class="mt-4 flex flex-col gap-3">
+                <NuxtLink
+                  v-for="m in data.motsCles"
+                  :key="m.mot"
+                  :to="lienAlerte(m.mot)"
+                  class="flex items-center gap-3 rounded-lg px-1 py-1 transition hover:bg-gray-50"
+                >
+                  <span class="w-16 shrink-0 truncate text-sm font-medium">{{ m.mot }}</span>
+                  <div class="h-2 flex-1 overflow-hidden rounded-full bg-gray-100">
+                    <div
+                      class="h-full rounded-full"
+                      :class="couleurBarre(m.tendance)"
+                      :style="{ width: `${(m.mentions / maxMentions) * 100}%` }"
+                    />
+                  </div>
+                  <span class="w-20 shrink-0 text-right text-xs text-gray-500">
+                    {{ m.mentions }} mention{{ m.mentions > 1 ? 's' : '' }}
+                  </span>
+                </NuxtLink>
+              </div>
+            </section>
+          </div>
         </template>
       </div>
     </div>
