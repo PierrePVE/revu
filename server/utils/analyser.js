@@ -14,8 +14,6 @@
  * Run the built-in test suite with: node analyser.js
  */
 
-import { fileURLToPath } from 'node:url';
-
 // ---------------------------------------------------------------------------
 // Stopwords
 // ---------------------------------------------------------------------------
@@ -30,6 +28,9 @@ const STOPWORDS_BRUTS = [
   'cette', 'mon', 'ma', 'mes', 'son', 'sa', 'ses', 'été', 'avoir', 'nous',
   'vous', 'ils', 'elles', 'leur', 'leurs', 'comme', 'fait', 'cest', 'etait',
   'avait', 'avoir', 'trop', 'donc', 'alors', 'après', 'avant',
+  // Common filler / intensifier adverbs and function words (non-actionable noise).
+  'beaucoup', 'vraiment', 'encore', 'tellement', 'totalement', 'complètement',
+  'absolument', 'plutôt', 'assez', 'sans', 'sont', 'être', 'cela', 'toujours', 'jamais',
 ];
 
 /**
@@ -345,9 +346,11 @@ const AVIS_TEST = [
 ];
 
 // Run the demo only when executed directly (node analyser.js), never when the
-// module is imported (e.g. by the Nitro server). ESM equivalent of the
-// CommonJS `require.main === module` check.
-const estExecuteDirectement = process.argv[1] === fileURLToPath(import.meta.url);
+// module is imported (e.g. by the Nitro server). We test that the *entry* script
+// is analyser.js — which stays false in any bundled/server context, unlike an
+// import.meta.url comparison that breaks once Nitro inlines this module.
+const estExecuteDirectement =
+  !!process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('/analyser.js');
 if (estExecuteDirectement) {
   const stats = analyser(AVIS_TEST);
   const alertes = genererAlertes(stats);
