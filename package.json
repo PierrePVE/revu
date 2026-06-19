@@ -11,7 +11,8 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "db:init": "tsx server/db/init.ts",
-    "db:seed": "tsx server/db/init.ts seed"
+    "db:seed": "tsx server/db/init.ts seed",
+    "create-admin": "tsx server/db/create-admin.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

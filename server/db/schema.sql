@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS commerces (
   password_hash VARCHAR(255) NOT NULL,
   -- Used in the public review URL: /avis/[slug] (e.g. "brasserie-du-centre").
   slug          VARCHAR(255) UNIQUE NOT NULL,
+  role          VARCHAR(20) NOT NULL DEFAULT 'commercant' CHECK (role IN ('admin', 'commercant')),
   created_at    TIMESTAMP DEFAULT NOW()
 );
 

@@ -106,7 +106,7 @@ export async function seedDb(): Promise<void> {
  * from the project-root .env without overriding variables already present in the
  * shell environment. Avoids pulling in an extra dependency just for the scripts.
  */
-function chargerEnvLocal(): void {
+export function chargerEnvLocal(): void {
   if (process.env.DATABASE_URL) return
   try {
     const contenu = readFileSync(join(process.cwd(), '.env'), 'utf8')
