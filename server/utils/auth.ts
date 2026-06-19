@@ -19,6 +19,7 @@ export const DUREE_SESSION = 7 * 24 * 60 * 60
 export interface SessionPayload {
   commerceId: string
   slug: string
+  role: string
 }
 
 /** HMAC key derived from NUXT_JWT_SECRET (set in .env). */
@@ -40,7 +41,7 @@ export function verifierMotDePasse(motDePasse: string, hash: string): Promise<bo
 
 /** Sign a session token (HS256, 7-day expiry). */
 export function signerSession(payload: SessionPayload): Promise<string> {
-  return new SignJWT({ commerceId: payload.commerceId, slug: payload.slug })
+  return new SignJWT({ commerceId: payload.commerceId, slug: payload.slug, role: payload.role })
     .setProtectedHeader({ alg: 'HS256' })
     .setSubject(payload.commerceId)
     .setIssuedAt()
@@ -56,7 +57,7 @@ export async function verifierSession(token: string | undefined): Promise<Sessio
   if (!token) return null
   try {
     const { payload } = await jwtVerify(token, cleSecrete())
-    return { commerceId: String(payload.commerceId), slug: String(payload.slug) }
+    return { commerceId: String(payload.commerceId), slug: String(payload.slug), role: String(payload.role) }
   } catch {
     return null
   }

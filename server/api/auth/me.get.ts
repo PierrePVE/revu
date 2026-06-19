@@ -14,5 +14,5 @@ export default defineEventHandler(async (event) => {
   const commerce = res.rows[0]
   if (!commerce) throw createError({ statusCode: 401, message: 'Session invalide.' })
 
-  return commerce
+  return { ...commerce, role: session.role }
 })

@@ -17,8 +17,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'Email et mot de passe requis.' })
   }
 
-  const res = await query<{ id: string; nom: string; slug: string; password_hash: string }>(
-    'SELECT id, nom, slug, password_hash FROM commerces WHERE email = $1',
+  const res = await query<{ id: string; nom: string; slug: string; password_hash: string; role: string }>(
+    'SELECT id, nom, slug, password_hash, role FROM commerces WHERE email = $1',
     [email],
   )
   const commerce = res.rows[0]
@@ -30,7 +30,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, message: 'Email ou mot de passe incorrect.' })
   }
 
-  const token = await signerSession({ commerceId: commerce.id, slug: commerce.slug })
+  const token = await signerSession({ commerceId: commerce.id, slug: commerce.slug, role: commerce.role })
   setCookie(event, COOKIE_SESSION, token, {
     httpOnly: true,
     sameSite: 'lax',
@@ -39,5 +39,5 @@ export default defineEventHandler(async (event) => {
     maxAge: DUREE_SESSION,
   })
 
-  return { commerce: { nom: commerce.nom, slug: commerce.slug } }
+  return { commerce: { nom: commerce.nom, slug: commerce.slug, role: commerce.role } }
 })

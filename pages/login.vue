@@ -22,11 +22,15 @@ async function seConnecter() {
   errorMessage.value = ''
   submitting.value = true
   try {
-    const { commerce } = await $fetch<{ commerce: { nom: string; slug: string } }>(
+    const { commerce } = await $fetch<{ commerce: { nom: string; slug: string; role: string } }>(
       '/api/auth/login',
       { method: 'POST', body: { email: email.value, password: password.value } },
     )
-    await navigateTo(`/dashboard?slug=${encodeURIComponent(commerce.slug)}`)
+    if (commerce.role === 'admin') {
+      await navigateTo('/admin')
+    } else {
+      await navigateTo(`/dashboard?slug=${encodeURIComponent(commerce.slug)}`)
+    }
   } catch (err: unknown) {
     const message = (err as { data?: { message?: string } })?.data?.message
     errorMessage.value = message || 'Connexion impossible. Réessayez.'
