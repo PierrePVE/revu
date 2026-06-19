@@ -73,3 +73,16 @@ export async function requireSession(event: H3Event): Promise<SessionPayload> {
   if (!session) throw createError({ statusCode: 401, message: 'Authentification requise.' })
   return session
 }
+
+/**
+ * Like requireSession, but additionally requires the `admin` role — throws 403
+ * otherwise. Call at the top of every admin-only route (real security; the page
+ * middleware only handles UX redirection).
+ */
+export async function requireAdmin(event: H3Event): Promise<SessionPayload> {
+  const session = await requireSession(event)
+  if (session.role !== 'admin') {
+    throw createError({ statusCode: 403, message: 'Réservé à l’administrateur.' })
+  }
+  return session
+}
