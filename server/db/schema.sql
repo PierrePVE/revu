@@ -45,6 +45,18 @@ CREATE TABLE IF NOT EXISTS alertes (
   created_at   TIMESTAMP DEFAULT NOW()
 );
 
+-- Password-reset tokens (self-service "forgot password"). Only a SHA-256 HASH of
+-- the token is stored, so a database leak can't be used to reset accounts.
+CREATE TABLE IF NOT EXISTS password_resets (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  commerce_id UUID NOT NULL REFERENCES commerces(id) ON DELETE CASCADE,
+  token_hash  VARCHAR(64) NOT NULL,
+  expires_at  TIMESTAMP NOT NULL,
+  used_at     TIMESTAMP,
+  created_at  TIMESTAMP DEFAULT NOW()
+);
+
 -- Indexes for the most common access pattern: fetching a commerce's rows.
 CREATE INDEX IF NOT EXISTS idx_avis_commerce_id ON avis (commerce_id);
 CREATE INDEX IF NOT EXISTS idx_alertes_commerce_id ON alertes (commerce_id);
+CREATE INDEX IF NOT EXISTS idx_password_resets_token ON password_resets (token_hash);

@@ -17,6 +17,7 @@
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "jose": "^5.9.6",
+    "nodemailer": "^9.0.1",
     "nuxt": "^3.13.0",
     "pg": "^8.13.0",
     "qrcode": "^1.5.3",
@@ -26,6 +27,7 @@
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
     "@types/bcryptjs": "^2.4.6",
+    "@types/nodemailer": "^8.0.1",
     "@types/pg": "^8.11.10",
     "@types/qrcode": "^1.5.5",
     "tailwindcss": "^4.0.0",

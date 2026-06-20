@@ -52,6 +52,10 @@ async function voirDemo() {
     errorMessage.value = 'Démo indisponible pour le moment.'
   }
 }
+
+async function handleResetPassword(){
+  await navigateTo('/reset-password')
+}
 </script>
 
 <template>
@@ -79,8 +83,6 @@ async function voirDemo() {
         <div>
           <div class="flex items-center justify-between">
             <label for="password" class="text-sm font-medium">Mot de passe</label>
-            <!-- Placeholder for a future password-reset flow. -->
-            <span class="cursor-default text-xs text-gray-400">Mot de passe oublié ?</span>
           </div>
           <input
             id="password"
@@ -90,6 +92,7 @@ async function voirDemo() {
             placeholder="••••••••"
             class="mt-1.5 w-full rounded-xl border border-gray-200 bg-white p-3 text-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
           />
+          <span class="text-xs text-gray-400 cursor-pointer" v-on:click="handleResetPassword">Mot de passe oublié ?</span>
         </div>
 
         <p v-if="errorMessage" class="rounded-lg bg-alert-bg px-3 py-2 text-sm text-alert">
