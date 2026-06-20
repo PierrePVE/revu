@@ -122,7 +122,14 @@ async function handleResetPassword(){
         Voir la démo
       </button>
 
-      <p class="mt-8 text-center text-xs text-gray-400">© 2026 Revu — Tous droits réservés</p>
+      <div class="mt-8 text-center text-xs text-gray-400">
+        <p>© 2026 Revu — Tous droits réservés</p>
+        <p class="mt-1">
+          <NuxtLink to="/mentions-legales" class="hover:underline">Mentions légales</NuxtLink>
+          ·
+          <NuxtLink to="/confidentialite" class="hover:underline">Confidentialité</NuxtLink>
+        </p>
+      </div>
     </div>
   </main>
 </template>
