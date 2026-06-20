@@ -15,9 +15,9 @@ useSeoMeta({
   title: () => (estIntrouvable.value ? 'Page introuvable · Revu' : 'Erreur · Revu'),
 })
 
-/** Leave the error state and go back to a safe page. */
+/** Leave the error state and go back to the landing page. */
 function revenir() {
-  clearError({ redirect: '/login' })
+  clearError({ redirect: '/' })
 }
 </script>
 
