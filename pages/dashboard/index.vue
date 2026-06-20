@@ -156,6 +156,7 @@ async function seDeconnecter() {
         </div>
         <div class="mt-3 flex gap-4 text-xs text-white/90">
           <NuxtLink to="/dashboard/qrcode" class="hover:underline">Mon QR code</NuxtLink>
+          <NuxtLink to="/compte" class="hover:underline">Mon compte</NuxtLink>
           <button type="button" class="hover:underline" @click="seDeconnecter">Déconnexion</button>
         </div>
       </header>
