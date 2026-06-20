@@ -66,8 +66,9 @@ export function rateLimit(event: H3Event, options: RateLimitOptions): void {
 
   bucket.count++
   if (bucket.count > options.max) {
+    // h3 types the Retry-After header value as a number (seconds).
     const retryAfter = Math.ceil((bucket.resetAt - maintenant) / 1000)
-    setResponseHeader(event, 'Retry-After', String(retryAfter))
+    setResponseHeader(event, 'Retry-After', retryAfter)
     throw createError({
       statusCode: 429,
       message: 'Trop de requêtes. Réessayez dans quelques minutes.',
