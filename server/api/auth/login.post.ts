@@ -9,6 +9,9 @@
  * verifierMotDePasse, signerSession, COOKIE_SESSION, DUREE_SESSION.
  */
 export default defineEventHandler(async (event) => {
+  // Slow down credential-stuffing / brute force: 10 attempts per IP / 15 min.
+  rateLimit(event, { cle: 'login', max: 10, fenetreMs: 15 * 60 * 1000 })
+
   const body = await readBody(event)
   const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : ''
   const password = typeof body?.password === 'string' ? body.password : ''

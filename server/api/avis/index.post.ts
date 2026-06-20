@@ -40,6 +40,12 @@ function lireNote(valeur: unknown, champ: string, requis: boolean): number | nul
 }
 
 export default defineEventHandler(async (event) => {
+  // Anti-spam: cap submissions per IP so the analysis can't be poisoned by a
+  // flood of fake reviews. 5 per hour is generous for a real customer but stops
+  // scripted abuse. (Customers on a shared venue Wi-Fi share one IP — raise this
+  // if legitimate reviews ever hit the limit.)
+  rateLimit(event, { cle: 'avis', max: 5, fenetreMs: 60 * 60 * 1000 })
+
   const body = await readBody(event)
 
   // --- Resolve the commerce from a UUID or a slug, and confirm it exists ----
