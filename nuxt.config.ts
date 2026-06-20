@@ -10,9 +10,35 @@ export default defineNuxtConfig({
   // Nuxt DevTools, enabled in development only.
   devtools: { enabled: true },
 
-  // Smooth cross-fade between route changes (see .page-* classes in main.css).
   app: {
+    // Smooth cross-fade between route changes (see .page-* classes in main.css).
     pageTransition: { name: 'page', mode: 'out-in' },
+
+    // Global <head>: language, favicon and default SEO/social tags. Individual
+    // pages override the title (and may override meta) via useSeoMeta.
+    head: {
+      htmlAttrs: { lang: 'fr' },
+      title: 'Revu — Avis clients pour commerces de proximité',
+      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        {
+          name: 'description',
+          content:
+            'Revu collecte les avis de vos clients par QR code et vous alerte des problèmes récurrents.',
+        },
+        // Brand colour for mobile browser UI.
+        { name: 'theme-color', content: '#1d9e75' },
+        // Open Graph defaults for link previews when a page is shared.
+        { property: 'og:type', content: 'website' },
+        { property: 'og:site_name', content: 'Revu' },
+        {
+          property: 'og:description',
+          content: 'Les avis de vos clients, et les alertes qui comptent.',
+        },
+      ],
+    },
   },
 
   // Global stylesheet — Tailwind v4 entry point + design tokens.
