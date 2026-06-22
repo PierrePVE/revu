@@ -47,8 +47,12 @@ export default defineEventHandler(async (event) => {
     [commerce.id],
   )
 
-  // Window the reviews to the requested period (alerts pass 'mois' = 30 days).
-  const rowsFenetre = filtrerPeriode(rows, periode)
+  // Window the reviews to the requested period (alerts pass 'mois' = 30 days),
+  // and drop any review without a global rating (shouldn't happen — the form
+  // requires it — but the column is nullable, so we guard the average).
+  const rowsFenetre = filtrerPeriode(rows, periode).filter(
+    (r): r is AvisRow & { note_globale: number } => r.note_globale !== null,
+  )
   const stats = analyser(
     rowsFenetre.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
   )

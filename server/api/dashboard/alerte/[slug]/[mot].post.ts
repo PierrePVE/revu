@@ -28,11 +28,14 @@ export default defineEventHandler(async (event) => {
     [session.commerceId],
   )
   const stats = analyser(
-    dansFenetre(rows).map((r) => ({
-      id: r.id,
-      noteGlobale: r.note_globale,
-      commentaire: r.commentaire ?? '',
-    })),
+    dansFenetre(rows)
+      // Drop reviews without a global rating (column is nullable) before averaging.
+      .filter((r): r is AvisRow & { note_globale: number } => r.note_globale !== null)
+      .map((r) => ({
+        id: r.id,
+        noteGlobale: r.note_globale,
+        commentaire: r.commentaire ?? '',
+      })),
   )
   const stat = stats.find((s: { mot: string; mentions: number; noteMoyenne: number }) => s.mot === mot)
   const mentions = stat?.mentions ?? 0

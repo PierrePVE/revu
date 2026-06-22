@@ -56,8 +56,11 @@ export default defineEventHandler(async (event) => {
   const avisPeriode = rowsPeriode.length
 
   // 3a) Keyword stats over the SELECTED period (top 8 most mentioned).
+  // Drop reviews without a global rating (column is nullable) before averaging.
   const statsPeriode = analyser(
-    rowsPeriode.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
+    rowsPeriode
+      .filter((r): r is AvisRow & { note_globale: number } => r.note_globale !== null)
+      .map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
   )
   const motsCles = statsPeriode
     .slice(0, 8)
@@ -72,7 +75,9 @@ export default defineEventHandler(async (event) => {
   //     selected period); handled alerts stay hidden until a newer review recurs.
   const rowsFenetre = dansFenetre(rows)
   const statsAlertes = analyser(
-    rowsFenetre.map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
+    rowsFenetre
+      .filter((r): r is AvisRow & { note_globale: number } => r.note_globale !== null)
+      .map((r) => ({ id: r.id, noteGlobale: r.note_globale, commentaire: r.commentaire ?? '' })),
   )
   const traites = await motsTraites(commerce.id)
   const alertes = genererAlertes(statsAlertes).filter(
