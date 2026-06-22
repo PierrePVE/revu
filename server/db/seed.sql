@@ -1,8 +1,10 @@
 -- server/db/seed.sql
--- Development fixtures for Revu: one test commerce + 15 fictional reviews.
+-- Demo fixtures for Revu: the "Brasserie du Centre" showcase commerce + 15
+-- fictional reviews. This is what the public "Voir la démo" button shows.
 --
--- Idempotent: re-running resets this commerce's data to a known state.
--- Run manually with `npm run db:seed`. Never run this in production.
+-- Idempotent and narrowly scoped: it only DELETEs/recreates the demo commerce
+-- (test@revu.fr) — it never touches real merchants — so it is safe to run both
+-- locally AND once against production to populate the demo. Run: `npm run db:seed`.
 
 BEGIN;
 
