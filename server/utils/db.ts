@@ -38,6 +38,14 @@ const estLocal = !!connectionString && /@(localhost|127\.0\.0\.1)[:/]/.test(conn
 const pool = new Pool({
   connectionString,
   ssl: estLocal ? false : { rejectUnauthorized: false },
+  // Cap connections per instance. On serverless (Vercel) each instance has its
+  // own pool, so a high max across many instances would exhaust managed Postgres
+  // connection slots (Railway's are limited). Tune via DATABASE_POOL_MAX.
+  max: Number(process.env.DATABASE_POOL_MAX ?? 5),
+  // Release idle clients quickly so cold/standby instances don't hold slots.
+  idleTimeoutMillis: 10_000,
+  // Fail fast instead of hanging when the database is unreachable.
+  connectionTimeoutMillis: 10_000,
 })
 
 // Surface errors from idle clients (e.g. a dropped connection) instead of
