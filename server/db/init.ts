@@ -38,7 +38,7 @@ function lireSql(nom: string): string {
  *
  * SSL is derived from the host so the exact same code runs locally and in
  * production (only DATABASE_URL changes): a local container (localhost) needs no
- * SSL, while managed Postgres such as Railway requires it.
+ * SSL, while managed Postgres such as Neon requires it.
  */
 function creerClient(): PgClient {
   const connectionString = process.env.DATABASE_URL

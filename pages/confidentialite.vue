@@ -49,7 +49,7 @@ useSeoMeta({ title: 'Politique de confidentialité · Revu' })
 
       <section class="mt-6 space-y-2 text-sm leading-relaxed">
         <h2 class="text-base font-semibold">Destinataires &amp; sous-traitants</h2>
-        <p>Les données ne sont ni vendues ni cédées. Elles peuvent être traitées par nos sous-traitants techniques : l'hébergeur [À COMPLÉTER : Vercel / Railway] et le service d'envoi d'emails <strong>Brevo</strong> (emails transactionnels, ex. réinitialisation de mot de passe).</p>
+        <p>Les données ne sont ni vendues ni cédées. Elles peuvent être traitées par nos sous-traitants techniques : l'hébergeur [À COMPLÉTER : Vercel / Neon] et le service d'envoi d'emails <strong>Brevo</strong> (emails transactionnels, ex. réinitialisation de mot de passe).</p>
       </section>
 
       <section class="mt-6 space-y-2 text-sm leading-relaxed">

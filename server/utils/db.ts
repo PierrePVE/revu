@@ -25,14 +25,15 @@ if (!connectionString) {
 /**
  * Shared pool for the whole server process. Reusing one pool (instead of
  * opening a connection per request) is essential on managed/serverless Postgres
- * such as Railway, where the number of connection slots is limited.
+ * such as Neon, where the number of connection slots is limited.
  *
  * Note: constructing the Pool does NOT open a connection — the first query() does.
  */
 // Derive SSL from the host so the exact same code runs locally and in
 // production (only DATABASE_URL changes): a local container (localhost) speaks
-// plain TCP, while managed Postgres such as Railway requires SSL — with certs
-// that aren't in Node's default CA bundle, hence rejectUnauthorized: false.
+// plain TCP, while managed Postgres such as Neon requires SSL. rejectUnauthorized
+// is off as a fallback for hosts whose certs aren't in Node's CA bundle; an
+// sslmode in the URL takes precedence (use sslmode=verify-full for Neon).
 const estLocal = !!connectionString && /@(localhost|127\.0\.0\.1)[:/]/.test(connectionString)
 
 const pool = new Pool({
@@ -40,7 +41,7 @@ const pool = new Pool({
   ssl: estLocal ? false : { rejectUnauthorized: false },
   // Cap connections per instance. On serverless (Vercel) each instance has its
   // own pool, so a high max across many instances would exhaust managed Postgres
-  // connection slots (Railway's are limited). Tune via DATABASE_POOL_MAX.
+  // connection slots (Neon's are limited). Tune via DATABASE_POOL_MAX.
   max: Number(process.env.DATABASE_POOL_MAX ?? 5),
   // Release idle clients quickly so cold/standby instances don't hold slots.
   idleTimeoutMillis: 10_000,

@@ -1,49 +1,70 @@
 # Déploiement de Revu
 
-Stack de production : **Nuxt 3** sur **Vercel**, **PostgreSQL** sur **Railway**,
-emails transactionnels via **Brevo (SMTP)**.
+Stack de production : **Nuxt 3** sur **Vercel** (front + API en fonctions
+serverless, région `lhr1` / Londres), **PostgreSQL** sur **Neon** (région AWS
+`eu-west-2` / Londres), emails transactionnels via **Brevo (SMTP)**.
+
+Il n'y a pas de back séparé à héberger : les routes `server/api/*` (Nitro) sont
+déployées par Vercel avec le front.
 
 Le code est identique en local et en prod — seules les variables d'environnement
 changent.
 
 ---
 
-## 1. Base de données (Railway)
+## 1. Base de données (Neon)
 
-1. Crée un service **PostgreSQL** sur Railway, puis copie son `DATABASE_URL`
-   (onglet *Variables* / *Connect*). Il ressemble à
-   `postgresql://user:pass@host.proxy.rlwy.net:port/railway`.
+1. Crée un projet **Neon** dans une région européenne. La région des fonctions
+   Vercel est fixée dans `nuxt.config.ts` (`nitro.vercel.functions.regions`) :
+   garde les deux **dans la même région** (Neon `eu-west-2` ↔ Vercel `lhr1`,
+   Neon `eu-central-1` ↔ Vercel `fra1`), sinon chaque requête SQL paie la
+   latence entre les deux.
 
-2. **Applique le schéma** sur cette base (crée les tables si absentes). Depuis le
-   dossier `app/`, avec le `DATABASE_URL` de Railway dans l'environnement :
+2. Dans **Connect**, Neon donne deux URLs :
+   - **pooled** — hôte en `…-pooler.…neon.tech` : passe par PgBouncer, c'est
+     celle de **Vercel** (beaucoup d'instances serverless = beaucoup de
+     connexions) ;
+   - **directe** — même URL sans `-pooler` : pour les **scripts d'admin** lancés
+     depuis ton poste.
+
+   Dans les deux, remplace `sslmode=require` par **`sslmode=verify-full`** (même
+   comportement aujourd'hui, et ça évite un avertissement de `pg`).
+
+3. Mets l'URL directe dans un fichier local **`.env.neon`** (ignoré par Git via
+   `.env.*`), avec les identifiants admin :
+
+   ```
+   DATABASE_URL=postgresql://…@ep-xxx.c-2.eu-west-2.aws.neon.tech/neondb?sslmode=verify-full&channel_binding=require
+   ADMIN_MAIL=ton@email.com
+   ADMIN_PASSWORD=un-mot-de-passe-fort
+   ```
+
+4. **Applique le schéma** (crée les tables manquantes, sans toucher aux données —
+   à relancer après chaque ajout de table dans `schema.sql`) :
 
    ```bash
-   # Git Bash / macOS / Linux
-   DATABASE_URL="postgresql://...railway..." npm run db:init
-   ```
-   ```powershell
-   # PowerShell
-   $env:DATABASE_URL="postgresql://...railway..."; npm run db:init
+   npm_lifecycle_event=db:init node --env-file=.env.neon --import tsx server/db/init.ts
    ```
 
-   > Pourquoi explicitement et pas au premier accès ? En serverless, plusieurs
-   > instances peuvent démarrer en même temps et tenter d'appliquer le schéma
-   > simultanément. On le fait une fois, à la main, c'est plus sûr.
+   > Pourquoi à la main et pas au démarrage ? En serverless, plusieurs instances
+   > peuvent démarrer en même temps et appliquer le schéma simultanément. On le
+   > fait une fois, explicitement, c'est plus sûr.
+   >
+   > Pourquoi pas `npm run db:init` ? Il lit `.env` (ta base locale) ; la
+   > commande ci-dessus force `.env.neon`. `npm_lifecycle_event` est la variable
+   > qui déclenche le mode CLI du script.
 
-3. **Crée le compte admin** sur cette base (mets un mot de passe fort) :
+5. **Crée le compte admin** :
 
    ```bash
-   DATABASE_URL="postgresql://...railway..." \
-   ADMIN_MAIL="ton@email.com" \
-   ADMIN_PASSWORD="un-mot-de-passe-fort" \
-   npm run create-admin
+   node --env-file=.env.neon --import tsx server/db/create-admin.ts
    ```
 
-4. *(Optionnel)* **Données de démo** pour le bouton « Voir la démo ». Sans danger
+6. *(Optionnel)* **Données de démo** pour le bouton « Voir la démo ». Sans danger
    pour les vraies données (ça ne touche que le commerce de démo `test@revu.fr`) :
 
    ```bash
-   DATABASE_URL="postgresql://...railway..." npm run db:seed
+   npm_lifecycle_event=db:seed node --env-file=.env.neon --import tsx server/db/init.ts seed
    ```
 
 ---
@@ -54,20 +75,22 @@ changent.
 
 | Variable           | Valeur                                              | Notes |
 |--------------------|-----------------------------------------------------|-------|
-| `DATABASE_URL`     | l'URL Postgres de Railway                           | requis |
+| `DATABASE_URL`     | l'URL Neon **pooled** (`-pooler`, `sslmode=verify-full`) | requis |
+| `DATABASE_POOL_MAX`| `2`                                                 | chaque instance serverless ouvre son propre pool |
 | `NUXT_JWT_SECRET`  | une chaîne aléatoire longue                          | **jamais** réutiliser la valeur de dev. Générer : `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"` |
 | `NUXT_MAIL_HOST`   | `smtp-relay.brevo.com`                              | |
 | `NUXT_MAIL_PORT`   | `587`                                               | |
 | `NUXT_MAIL_USER`   | ton login SMTP Brevo (`xxxx@smtp-brevo.com`)        | |
 | `NUXT_MAIL_PASS`   | ta clé SMTP Brevo                                   | secret |
 | `NUXT_MAIL_FROM`   | l'adresse expéditrice (validée dans Brevo)          | idéalement sur ton domaine |
-| `ADMIN_MAIL`       | l'email du compte admin                             | (sert au script create-admin) |
-| `ADMIN_PASSWORD`   | le mot de passe admin                               | (sert au script create-admin) |
-| `DATABASE_POOL_MAX`| `5` (optionnel)                                     | à baisser si Railway limite les connexions |
 
-> ⚠️ Ne mets jamais ces valeurs dans le code ni dans Git. Le fichier `.env` reste
-> local et gitignoré.
+`ADMIN_MAIL` / `ADMIN_PASSWORD` ne servent qu'au script `create-admin` (étape
+1.5) : inutile de les mettre sur Vercel.
 
+> ⚠️ Ne mets jamais ces valeurs dans le code ni dans Git. Les fichiers `.env` et
+> `.env.neon` restent locaux et gitignorés. Si une URL de base a fuité (collée
+> dans un chat, un ticket…), réinitialise le mot de passe dans Neon (*Branches →
+> main → Roles → Reset password*) puis mets à jour `.env.neon` et Vercel.
 ---
 
 ## 3. Projet Vercel

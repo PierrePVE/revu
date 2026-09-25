@@ -3,7 +3,7 @@
  *
  * Hooks into Nitro's `error` event so every server fault is logged once, in a
  * consistent structured line (timestamp, method, path, status, message + stack).
- * Stdout/stderr are captured by the host (Railway, Vercel…), so this is enough
+ * Stdout/stderr are captured by the host (Vercel…), so this is enough
  * for production triage; swap console for Sentry here later if needed.
  *
  * Expected client errors (401/403/404/429…) are skipped on purpose — only real

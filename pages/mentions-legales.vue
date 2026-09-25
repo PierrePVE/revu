@@ -31,9 +31,9 @@ useSeoMeta({ title: 'Mentions légales · Revu' })
       <section class="mt-6 space-y-2 text-sm leading-relaxed">
         <h2 class="text-base font-semibold">Hébergement</h2>
         <p>
-          L'application est hébergée par [À COMPLÉTER : ex. Vercel Inc. / Railway], dont le
+          L'application est hébergée par [À COMPLÉTER : ex. Vercel Inc.], dont le
           siège est situé [À COMPLÉTER : adresse de l'hébergeur]. La base de données est
-          hébergée par [À COMPLÉTER : ex. Railway].
+          hébergée par [À COMPLÉTER : ex. Neon (région AWS eu-west-2, Londres)].
         </p>
       </section>
 

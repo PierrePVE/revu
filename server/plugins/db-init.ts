@@ -4,7 +4,7 @@
  * Nitro auto-registers plugins in server/plugins. In development this applies
  * schema.sql (creating the tables on first run) so that `npm run dev` yields a
  * ready-to-use database. In production the schema is managed separately on the
- * Railway database, so we skip it here.
+ * Neon database (npm run db:init), so we skip it here.
  *
  * `defineNitroPlugin` is auto-imported by Nitro.
  */
