@@ -56,6 +56,16 @@ CREATE TABLE IF NOT EXISTS password_resets (
   created_at  TIMESTAMP DEFAULT NOW()
 );
 
+-- Per-IP rate-limit counters (fixed window), see server/utils/rateLimit.ts.
+-- Kept in the database rather than in memory because serverless instances
+-- (Vercel) don't share memory and can be recycled at any time.
+CREATE TABLE IF NOT EXISTS rate_limits (
+  -- "<bucket>:<ip>", e.g. "login:203.0.113.7".
+  cle      VARCHAR(255) PRIMARY KEY,
+  count    INTEGER NOT NULL,
+  reset_at TIMESTAMPTZ NOT NULL
+);
+
 -- Indexes for the most common access pattern: fetching a commerce's rows.
 CREATE INDEX IF NOT EXISTS idx_avis_commerce_id ON avis (commerce_id);
 CREATE INDEX IF NOT EXISTS idx_alertes_commerce_id ON alertes (commerce_id);

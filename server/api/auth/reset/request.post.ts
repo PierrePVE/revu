@@ -24,7 +24,7 @@ interface DemandeBody {
 
 export default defineEventHandler(async (event) => {
   // Anti-abuse: don't let anyone spam reset emails. 3 requests per IP / hour.
-  rateLimit(event, { cle: 'reset', max: 3, fenetreMs: 60 * 60 * 1000 })
+  await rateLimit(event, { cle: 'reset', max: 3, fenetreMs: 60 * 60 * 1000 })
 
   const body = await readBody<DemandeBody>(event)
   const email = body?.email?.trim().toLowerCase() ?? ''

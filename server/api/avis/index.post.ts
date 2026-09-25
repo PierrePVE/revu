@@ -44,7 +44,7 @@ export default defineEventHandler(async (event) => {
   // flood of fake reviews. 5 per hour is generous for a real customer but stops
   // scripted abuse. (Customers on a shared venue Wi-Fi share one IP — raise this
   // if legitimate reviews ever hit the limit.)
-  rateLimit(event, { cle: 'avis', max: 5, fenetreMs: 60 * 60 * 1000 })
+  await rateLimit(event, { cle: 'avis', max: 5, fenetreMs: 60 * 60 * 1000 })
 
   const body = await readBody(event)
 
