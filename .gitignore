@@ -4,6 +4,8 @@ node_modules
 # Nuxt / Nitro build artifacts
 .nuxt
 .output
+# Vercel CLI project link and local prebuilt output
+.vercel
 .data
 .nitro
 .cache
