@@ -64,6 +64,12 @@ export default defineNuxtConfig({
   nitro: {
     vercel: {
       functions: { regions: ['lhr1'] },
+      config: {
+        // Daily reset of the public demo (04:00 UTC) so its data never ages or
+        // accumulates visitors' changes — see server/api/cron/reseed-demo.get.ts.
+        // Vercel's Hobby plan allows one run per day per cron job.
+        crons: [{ path: '/api/cron/reseed-demo', schedule: '0 4 * * *' }],
+      },
     },
   },
 
