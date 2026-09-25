@@ -57,6 +57,16 @@ export default defineNuxtConfig({
     strict: true,
   },
 
+  // Vercel deployment: run the server functions in London (lhr1), next to the
+  // Neon database (aws eu-west-2). Vercel defaults to Washington (iad1), which
+  // would add a transatlantic round-trip to every SQL query and move French
+  // users' data processing outside Europe. Ignored by non-Vercel builds.
+  nitro: {
+    vercel: {
+      functions: { regions: ['lhr1'] },
+    },
+  },
+
   // Runtime configuration, populated from environment variables.
   // Top-level keys are SERVER-ONLY (never shipped to the browser). Nuxt
   // automatically overrides them from matching NUXT_* env vars at runtime;
