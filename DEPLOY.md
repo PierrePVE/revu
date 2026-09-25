@@ -83,9 +83,21 @@ changent.
 | `NUXT_MAIL_USER`   | ton login SMTP Brevo (`xxxx@smtp-brevo.com`)        | |
 | `NUXT_MAIL_PASS`   | ta clé SMTP Brevo                                   | secret |
 | `NUXT_MAIL_FROM`   | l'adresse expéditrice (validée dans Brevo)          | idéalement sur ton domaine |
+| `CRON_SECRET`      | une chaîne aléatoire (même commande que le JWT)      | protège la remise à zéro quotidienne de la démo (voir ci-dessous) |
 
 `ADMIN_MAIL` / `ADMIN_PASSWORD` ne servent qu'au script `create-admin` (étape
 1.5) : inutile de les mettre sur Vercel.
+
+**Démo remise à zéro chaque nuit.** Un cron Vercel (déclaré dans `nuxt.config.ts`,
+`nitro.vercel.config.crons`) appelle `/api/cron/reseed-demo` à 04:00 UTC : il
+rejoue `seed.sql`, donc les dates des avis restent récentes et les modifications
+faites par les visiteurs sur le compte démo disparaissent. Vercel envoie
+`CRON_SECRET` tout seul ; sans cette variable, la route refuse tous les appels.
+Pour déclencher un reset à la main :
+
+```bash
+curl -H "Authorization: Bearer <CRON_SECRET>" https://<ton-domaine>/api/cron/reseed-demo
+```
 
 > ⚠️ Ne mets jamais ces valeurs dans le code ni dans Git. Les fichiers `.env` et
 > `.env.neon` restent locaux et gitignorés. Si une URL de base a fuité (collée
