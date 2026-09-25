@@ -2,12 +2,12 @@
  * server/db/init.ts — database bootstrap & seeding for Revu.
  *
  * Exposes two helpers:
- *   - initDb(): applies schema.sql when the tables don't exist yet. Called at
+ *   - initDb(): applies the idempotent schema.sql (creates missing tables). Called at
  *     server startup (in development) by server/plugins/db-init.ts.
  *   - seedDb(): loads the development fixtures from seed.sql.
  *
  * Also runnable from the command line (transpiled on the fly by tsx):
- *   npm run db:init   -> create the schema if needed
+ *   npm run db:init   -> create missing tables (safe to re-run)
  *   npm run db:seed   -> insert the development test data
  *
  * No business logic here — schema management and connectivity only.
@@ -53,35 +53,17 @@ function creerClient(): PgClient {
 }
 
 /**
- * Whether the core schema already exists (we probe the `commerces` table).
- *
- * @param client - a connected PostgreSQL client.
- */
-async function tablesExistent(client: PgClient): Promise<boolean> {
-  const res = await client.query<{ present: boolean }>(
-    `SELECT EXISTS (
-       SELECT FROM information_schema.tables
-       WHERE table_schema = 'public' AND table_name = 'commerces'
-     ) AS present`,
-  )
-  return res.rows[0]?.present === true
-}
-
-/**
- * Apply schema.sql when the schema is missing. Idempotent and safe to call on
- * every startup.
+ * Apply schema.sql. Every statement in it uses IF NOT EXISTS, so it is always
+ * applied in full: this creates tables added after the database was first
+ * initialised (e.g. rate_limits) without touching existing data. Safe to call
+ * on every startup.
  */
 export async function initDb(): Promise<void> {
   const client = creerClient()
   await client.connect()
   try {
-    if (await tablesExistent(client)) {
-      console.log('ℹ️  Tables déjà présentes — schéma inchangé.')
-    } else {
-      await client.query(lireSql('schema.sql'))
-      console.log('🆕 Schéma appliqué (tables créées).')
-    }
-    console.log('✅ Base de données initialisée')
+    await client.query(lireSql('schema.sql'))
+    console.log('✅ Base de données initialisée (schéma à jour)')
   } finally {
     await client.end()
   }

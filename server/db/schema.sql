@@ -2,7 +2,7 @@
 -- Revu database schema.
 --
 -- Idempotent: every statement uses IF NOT EXISTS, so the whole file is safe to
--- run on every startup (server/db/init.ts applies it when the tables are missing).
+-- run on every startup (server/db/init.ts always applies it in full).
 
 -- gen_random_uuid() is built into PostgreSQL 13+. The extension is kept as a
 -- safety net for older servers and is a no-op when the function already exists.
